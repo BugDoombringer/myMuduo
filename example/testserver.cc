@@ -13,17 +13,18 @@ public:
         : server_(loop, addr, name)
         , loop_(loop)
     {
-        // 注册回调函数
+        // 设置连接回调函数
         server_.setConnectionCallback(
             std::bind(&EchoServer::onConnection, this, std::placeholders::_1)
         );
 
+        // 设置消息回调函数
         server_.setMessageCallback(
             std::bind(&EchoServer::onMessage, this,
                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
         );
 
-        // 设置合适的loop线程数量 loopthread
+        // 设置subloop线程数量，一般与CPU核数相等
         server_.setThreadNum(3);
     }
     void start()
@@ -51,7 +52,7 @@ private:
     {
         std::string msg = buf->retrieveAllAsString();
         conn->send(msg);
-        conn->shutdown(); // 写端   EPOLLHUP =》 closeCallback_
+        conn->shutdown();
     }
 
     EventLoop *loop_;
@@ -62,9 +63,9 @@ int main()
 {
     EventLoop loop;
     InetAddress addr(8000);
-    EchoServer server(&loop, addr, "EchoServer-01"); // Acceptor non-blocking listenfd  create bind 
-    server.start(); // listen  loopthread  listenfd => acceptChannel => mainLoop =>
-    loop.loop(); // 启动mainLoop的底层Poller
+    EchoServer server(&loop, addr, "EchoServer-01"); 
+    server.start(); 
+    loop.loop(); 
 
     return 0;
 }
